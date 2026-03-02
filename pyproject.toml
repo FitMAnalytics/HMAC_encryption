@@ -1,7 +1,7 @@
 [project]
 name = "hmac-addresses"
 version = "0.1.0"
-description = "Add your description here"
+description = "Privacy-preserving Chinese address matching using HMAC-SHA256 and BERT-based parsing."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
