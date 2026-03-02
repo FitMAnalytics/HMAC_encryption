@@ -1,6 +1,7 @@
 import re
 import hmac
 import hashlib
+from collections import Counter
 
 def tokenize_address(text, language='zh'):
     """
