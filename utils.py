@@ -39,6 +39,31 @@ def tokenize_address(text, language='zh'):
 
     return tokens
 
+def tokenize_English_address(text):
+    """
+    Tokenize an English address into character-level tokens.
+    
+    - Text is uppercased
+    - Numbers (digit runs) are kept as atomic tokens
+    - Whitespace becomes the special '<s>' token
+    - All other characters are split individually
+
+    Example:
+        '123 5th avenue' -> ['123', '<s>', '5', 'T', 'H', '<s>', 'A', 'V', 'E', 'N', 'U', 'E']
+    """
+    clean_text = " ".join(text.split()).strip().upper()
+    
+    tokens = []
+    for tok in re.findall(r'\d+|\s+|[A-Z]+|[^A-Z0-9\s]', clean_text):
+        if re.match(r'^\d+$', tok):
+            tokens.append(tok)
+        elif tok.isspace():
+            tokens.append('<s>')
+        else:
+            tokens.extend(list(tok))
+    
+    return tokens
+
 def get_hmac_1grams(
     tokens, 
     secret_key="dia-123", 
@@ -58,6 +83,39 @@ def get_hmac_1grams(
             hmac_list.append(h.hexdigest())
         
     return hmac_list    
+
+def get_hmac_1grams_en_str(
+    tokens,
+    secret_key="dia-123",
+    truncate_switch=False,
+    truncate_length=12
+):
+    key_bytes = secret_key.encode('utf-8')
+    
+    hmac_list = []
+    for token in tokens:
+        h = hmac.new(key_bytes, token.encode('utf-8'), hashlib.sha256)
+        if truncate_switch:
+            hmac_list.append(h.hexdigest()[:truncate_length])
+        else:
+            hmac_list.append(h.hexdigest())
+    return "".join(hmac_list)
+
+def tokenize_hmac(hmac_string, hash_length=256):
+    """
+    Split a concatenated HMAC string back into individual hash tokens.
+    
+    Raises ValueError if the string length is not a multiple of hash_length.
+
+    Example (hash_length=12):
+        'a3f1c9b2e4d1f8a0c3b2...' -> ['a3f1c9b2e4d1', 'f8a0c3b2e4d1', ...]
+    """
+    if len(hmac_string) % hash_length != 0:
+        raise ValueError(
+            f"hmac_string length ({len(hmac_string)}) is not a multiple of hash_length ({hash_length})."
+        )
+    
+    return [hmac_string[i:i+hash_length] for i in range(0, len(hmac_string), hash_length)]
 
 def get_hmac_2grams(
     tokens, 
